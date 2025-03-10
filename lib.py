@@ -1,4 +1,5 @@
 import scipy
+import math
 import numpy as np
 
 
@@ -12,6 +13,7 @@ def interpret(ns: str) -> list[float]:
     return [float(x) for x in ns if x]
 
 
+# numpy requires method="hazen"
 def quantiles(ns: list[float], percentiles: list[float]) -> list[float]:
     return scipy.stats.mstats.mquantiles(ns, percentiles, alphap=0.5, betap=0.5)
 
