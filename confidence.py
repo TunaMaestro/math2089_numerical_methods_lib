@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import t, norm
+from scipy.stats import t, norm, ttest_1samp
 from math import sqrt
 
 from dataclasses import dataclass
@@ -57,3 +57,16 @@ def required_sample_prop(yes: int, n: int, confidence: float, error: float):
     var = n * pp * (1 - pp)
     sd_P = (var / (n)) ** 0.5
     return required_sample(z, sd_P, error)
+
+def ttest(xs, expected_mean):
+    return ttest_1samp(xs, expected_mean)
+
+def ttest_prop(yes, n, expected):
+    pp = yes / n
+    z = (pp - expected) / sqrt(expected * (1 - expected) / n)
+    P = t.cdf(z, df=n-1)
+    print(f"z = {z}")
+    print(f"P = {P}")
+    print(f"nπ(1-π) = {n * expected * (1 - expected)}")
+    print(f"np(1-p) = {n * pp * (1 - pp)}")
+
