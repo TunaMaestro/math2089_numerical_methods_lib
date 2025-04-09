@@ -1,7 +1,8 @@
 import numpy as np
-from scipy.stats import t, norm, ttest_1samp
+from scipy.stats import t, norm, ttest_1samp, ttest_ind, ttest_rel
 from math import sqrt
 
+from pprint import pprint
 from dataclasses import dataclass
 
 @dataclass
@@ -58,8 +59,16 @@ def required_sample_prop(yes: int, n: int, confidence: float, error: float):
     sd_P = (var / (n)) ** 0.5
     return required_sample(z, sd_P, error)
 
+# when taking the result of this, the P val is correct for H₀: == and Hₐ: !=
 def ttest(xs, expected_mean):
     return ttest_1samp(xs, expected_mean)
+
+def test_ineq_p(res):
+    test = res.statistic
+    left_tail = t.cdf(test, res.df)
+    right_tail = 1 - left_tail
+    print(f"{left_tail=}\n{right_tail=}")
+    
 
 def ttest_prop(yes, n, expected):
     pp = yes / n
@@ -70,3 +79,15 @@ def ttest_prop(yes, n, expected):
     print(f"nπ(1-π) = {n * expected * (1 - expected)}")
     print(f"np(1-p) = {n * pp * (1 - pp)}")
 
+# use ttest_ind for comparison experiments
+
+def two_means_confidence(xs1: list[float], xs2: list[float], confidence: float):
+    ttest_res = ttest_ind(xs1, xs2)
+    pprint(ttest_res)
+    ci = ttest_res.confidence_interval(confidence)
+    pprint(ci)
+
+def partition_pred(xs, f):
+    return [x for x in xs if f(x)], [x for x in xs if not f(x)]
+
+# use ttest_rel(x1, x2) for pairwise
