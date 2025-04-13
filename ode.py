@@ -1,6 +1,9 @@
 from typing import Callable, Tuple
 
-from numpy import arange, size, zeros
+from numpy import arange, size, zeros, array
+from scipy import integrate
+
+import solving
 
 
 def apply_eulers(f, h) -> Callable[[Tuple[float, float]], Tuple[float, float]]:
@@ -123,3 +126,23 @@ def math2089rk4(f, t0, tmax, N, y0):
         y[n + 1, :] = y[n, :] + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)  # RK4
 
     return t, y
+
+
+def solve_ivp(f, t0, tmax, y0):
+    output = integrate.solve_ivp(f, [t0, tmax], y0, rtol=1e-7, atol=1e-10)
+    t = output.t
+    y = output.y
+    return output
+    # y_like_in_lecs = y.T
+
+
+def solve_bvp(f, t_a, t_b, y_a, y_b, eta_low, eta_high):
+    def distance_f(test_eta):
+        print(f"η or 𝛈={test_eta}")
+        x0 = array([y_a, test_eta])
+        result = integrate.solve_ivp(f, [t_a, t_b], x0, rtol=1e-7, atol=1e-10)
+        y = result.y.T[-1, 0] # Last value of y in the time series, and take the value (not y')
+        distance = y - y_b
+        return distance
+
+    solving.brentq(distance_f, eta_low, eta_high)
