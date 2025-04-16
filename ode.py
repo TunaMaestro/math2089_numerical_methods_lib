@@ -1,6 +1,6 @@
 from typing import Callable, Tuple
 
-from numpy import arange, size, zeros, array
+from numpy import arange, hstack, size, zeros, array
 from scipy import integrate
 
 import solving
@@ -55,6 +55,7 @@ def math2089euler(f, t0, tmax, N, y0):
 ###########################################################################
 
 
+# HEUN IS order h²
 def math2089heun(f, t0, tmax, N, y0):
     """
     Heun's method for a system of first order ODEs
@@ -128,11 +129,20 @@ def math2089rk4(f, t0, tmax, N, y0):
     return t, y
 
 
+def rk2_step(f, h, pair):
+    t, y = pair
+    k1 = f(t, y)
+    k2 = f(t + 2 / 3 * h, y + 2 / 3 * h * k1)
+    y_next = y + h / 4 * (k1 + 3 * k2)
+    print(f"k1 = {k1}\nk2 = {k2}")
+    return [t + h, y_next]
+
+
 def solve_ivp(f, t0, tmax, y0):
     output = integrate.solve_ivp(f, [t0, tmax], y0, rtol=1e-7, atol=1e-10)
     t = output.t
     y = output.y
-    return output
+    return t, y.T
     # y_like_in_lecs = y.T
 
 
@@ -141,8 +151,16 @@ def solve_bvp(f, t_a, t_b, y_a, y_b, eta_low, eta_high):
         print(f"η or 𝛈={test_eta}")
         x0 = array([y_a, test_eta])
         result = integrate.solve_ivp(f, [t_a, t_b], x0, rtol=1e-7, atol=1e-10)
-        y = result.y.T[-1, 0] # Last value of y in the time series, and take the value (not y')
+        y = result.y.T[
+            -1, 0
+        ]  # Last value of y in the time series, and take the value (not y')
         distance = y - y_b
         return distance
 
     solving.brentq(distance_f, eta_low, eta_high)
+
+
+def zip_res(r):
+    t, y = r
+    t = t[:, None]
+    return hstack([t, y])
