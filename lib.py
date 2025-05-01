@@ -45,3 +45,6 @@ def filter_outliers(ns):
 
 
 # histogram
+
+def iterative_min_k(order_of_convergence, tolerance, e0):
+    return np.log(np.log(tolerance)/np.log(e0))/np.log(order_of_convergence)

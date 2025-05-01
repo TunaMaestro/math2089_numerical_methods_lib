@@ -138,8 +138,8 @@ def rk2_step(f, h, pair):
     return [t + h, y_next]
 
 
-def solve_ivp(f, t0, tmax, y0):
-    output = integrate.solve_ivp(f, [t0, tmax], y0, rtol=1e-7, atol=1e-10)
+def solve_ivp(f, tRange, y0):
+    output = integrate.solve_ivp(f, tRange, y0, rtol=1e-7, atol=1e-10)
     t = output.t
     y = output.y
     return t, y.T
@@ -164,3 +164,45 @@ def zip_res(r):
     t, y = r
     t = t[:, None]
     return hstack([t, y])
+
+
+class RK3:
+    def __init__(self, f, t_range, y0, h):
+        self.f = f
+        self.t0, self.tmax = t_range
+        self.y0 = y0
+        self.h = h
+
+    def k1(self, t, y):
+        return self.f(t, y)
+
+    def k2(self, t, y):
+        return self.f(t + self.h / 3, y + (self.h / 3) * self.k1(t, y))
+
+    def k3(self, t, y):
+        return self.f(t + 2 * self.h / 3, y + (2 * self.h / 3) * self.k2(t, y))
+
+    def y_n(self, n):
+        t = self.t0
+        y = self.y0
+        for _ in range(n):
+            k1_val = self.k1(t, y)
+            k3_val = self.k3(t, y)  # Note: k3 depends on k2, which depends on k1
+            y += self.h / 4 * (k1_val + 3 * k3_val)
+            t += self.h
+        return y
+
+    def k1k2k3(self):
+        t = self.t0
+        y = self.y0
+        print(f"""
+k1 = {self.k1(t, y)}
+k2 = {self.k2(t, y)}
+k3 = {self.k3(t, y)}
+              """)
+
+
+def interp(p1, p2, y) -> float:
+    x1, y1 = p1
+    x2, y2 = p2
+    return (y - y1) / (y2 - y1) * (x2 - x1) + x1
