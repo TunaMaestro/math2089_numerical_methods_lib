@@ -201,6 +201,74 @@ k2 = {self.k2(t, y)}
 k3 = {self.k3(t, y)}
               """)
 
+class RK2:
+    def __init__(self, f, t_range, y0, h):
+        self.f = f
+        self.t0, self.tmax = t_range
+        self.y0 = y0
+        self.h = h
+
+    def k1(self, t, y):
+        return self.f(t, y)
+
+    def k2(self, t, y):
+        return self.f(t + 3 * self.h / 4, y + 3 * self.h / 4 * self.k1(t, y))
+
+    def y_n(self, n):
+        t = self.t0
+        y = self.y0
+        for _ in range(n):
+            k1_val = self.k1(t, y)
+            k2_val = self.k2(t, y)
+            y += self.h / 3 * (k1_val + 2 * k2_val)
+            t += self.h
+        return y
+
+    def k1k2(self):
+        t = self.t0
+        y = self.y0
+        print(f"""
+k1 = {self.k1(t, y)}
+k2 = {self.k2(t, y)}
+        """)
+
+
+class AB2:
+    def __init__(self, f, t_range, y0, h):
+        self.f = f
+        self.t0, self.tmax = t_range
+        self.y0 = y0
+        self.h = h
+
+    def bootstrap(self):
+        # Use RK2 to compute y1
+        rk2 = RK2(self.f, (self.t0, self.t0 + self.h), self.y0, self.h)
+        y1 = rk2.y_n(1)
+        return [(self.t0, self.y0), (self.t0 + self.h, y1)]
+
+    def y_n(self, n):
+        history = self.bootstrap()
+        while len(history) <= n:
+            tn_1, yn_1 = history[-2]
+            tn, yn = history[-1]
+            fn = self.f(tn, yn)
+            fn_1 = self.f(tn_1, yn_1)
+            yn1 = yn + self.h / 2 * (3 * fn - fn_1)
+            tn1 = tn + self.h
+            history.append((tn1, yn1))
+        return history[n][1]
+
+    def print_step(self):
+        history = self.bootstrap()
+        tn_1, yn_1 = history[0]
+        tn, yn = history[1]
+        fn = self.f(tn, yn)
+        fn_1 = self.f(tn_1, yn_1)
+        print(f"""
+f(tn, yn)   = {fn}
+f(tn-1, yn-1) = {fn_1}
+        """)
+
 
 def interp(p1, p2, y) -> float:
     x1, y1 = p1

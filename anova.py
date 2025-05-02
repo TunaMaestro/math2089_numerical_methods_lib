@@ -34,7 +34,6 @@ def anova_from_dataframe(df: DataFrame) -> tuple[DataFrame, RegressionResultsWra
     df["x"] = df["x"].astype("category")
     model = smf.ols("y ~ C(x)", data=df).fit()
     anova = sm.stats.anova_lm(model, typ=2)
-    print(anova)
     return anova, model
 
 
@@ -45,7 +44,6 @@ def anova_with_block_from_dataframe(
     df["block"] = df["block"].astype("category")
     model = smf.ols("y ~ C(x) + C(block)", data=df).fit()
     anova = sm.stats.anova_lm(model, typ=2)
-    print(anova)
     return anova, model
 
 
@@ -65,6 +63,26 @@ def plot_residuals_vs_fitted(model: RegressionResultsWrapper) -> None:
 def plot_residuals_qq(model: RegressionResultsWrapper) -> None:
     residuals = model.resid
     probplot.pplot(residuals)
+
+
+def plot_boxes(df) -> None:
+    categorical_cols = df.select_dtypes(["category"]).columns
+    y = df["y"]
+
+    n = len(categorical_cols)
+    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5))
+    if n == 1:
+        axes = [axes]
+
+    for ax, col in zip(axes, categorical_cols):
+        df.boxplot(column="y", by=col, ax=ax)
+        ax.set_title(f"Boxplot of y by {col}")
+        ax.set_xlabel(col)
+        ax.set_ylabel("y")
+
+    plt.suptitle("")
+    plt.tight_layout()
+    plt.show()
 
 
 def compute_pairwise_bonferroni(
@@ -104,8 +122,9 @@ def print_pairwise_results(results: List[PairwiseComparison], alpha: float) -> N
     print(f"Bonferroni correction factor K = {K}\n")
 
     for r in results:
+        versus = f"{r.group_a} vs {r.group_b}"
         output = (
-            f"{r.group_a} vs {r.group_b} | "
+            f"{versus:<25}| "
             f"t = {r.t_stat:.4f}, "
             f"p_uncorrected = {r.p_uncorrected:.4f}, "
             f"p_bonferroni = {r.p_bonferroni:.4f}"
@@ -152,11 +171,16 @@ class AnovaDataset:
     def plot_residuals_qq(self) -> None:
         plot_residuals_qq(self.model)
 
+    def plot_boxes(self) -> None:
+        plot_boxes(self.to_dataframe())
+
     def pairwise_comparisons(self) -> List[PairwiseComparison]:
         return compute_pairwise_bonferroni(self.model, self.to_dataframe())
 
-    def print_pairwise(self) -> None:
-        print_pairwise_results(self.pairwise_comparisons(), ALPHA)
+    def print_pairwise(self, alpha=ALPHA) -> None:
+        cmps = self.pairwise_comparisons()
+        print(f"Adjusted alpha = {alpha / len(cmps)}")
+        print_pairwise_results(cmps, alpha)
 
 
 """

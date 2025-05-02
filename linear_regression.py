@@ -69,7 +69,7 @@ class RegressionResult:
         return ConfidenceIntervalReport(
             t_value=t_stat,
             p_value=p_val,
-            ci_b1_low=ci_low,
+           ci_b1_low=ci_low,
             ci_b1_high=ci_high,
             alpha=alpha,
             df=self.degrees_of_freedom,

@@ -43,6 +43,9 @@ def legendre(f, a, b, N):
 
     return NumIntResult(xs_ab, weights_ab, None, Q)
 
+def error_function(integration, f, a, b, I):
+    return lambda N: abs(integration(f, a, b, N).Q - I)
+
 def adaptive(f, a, b):
     # returns Q, abs error estimate
     Q, err = scipy.integrate.quad(f, a, b, epsabs=1e-10, epsrel=2e-8)
